@@ -81,16 +81,14 @@ class RenogyCoordinator(DataUpdateCoordinator):
         # What is returned here is stored in self.data by the DataUpdateCoordinator
         return RenBtApiData(self.api.controller_name, self.device_type, devices)
 
-    def get_device_by_id(
-        self, device_type: RenogyDeviceType, device_id: int
-    ) -> RenogyDeviceData | None:
+    def get_device_by_unique_id(self, unique_id: str) -> RenogyDeviceData | None:
         """Return device by device id."""
-        # Called by the binary sensors and sensors to get their updated data from self.data
+        # Called by the sensors and sensors to get their updated data from self.data
         try:
             return [
                 device
                 for device in self.data.devices
-                if device.device_type == device_type and device.device_id == device_id
+                if device.device_unique_id == unique_id
             ][0]
         except IndexError as err:
             _LOGGER.error(err)

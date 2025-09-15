@@ -112,8 +112,8 @@ class PowerSensor(CoordinatorEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Update sensor with latest data from coordinator."""
         # This method is called by your DataUpdateCoordinator when a successful update runs.
-        self.device = self.coordinator.get_device_by_id(
-            self.device.device_type, self.device_id
+        self.device = self.coordinator.get_device_by_unique_id(
+            self.device.device_unique_id
         )
         _LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()
@@ -183,8 +183,8 @@ class EnergyStorageSensor(CoordinatorEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Update sensor with latest data from coordinator."""
         # This method is called by your DataUpdateCoordinator when a successful update runs.
-        self.device = self.coordinator.get_device_by_id(
-            self.device.device_type, self.device_id
+        self.device = self.coordinator.get_device_by_unique_id(
+            self.device.device_unique_id
         )
         _LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()
@@ -254,8 +254,8 @@ class AmpHourSensor(CoordinatorEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Update sensor with latest data from coordinator."""
         # This method is called by your DataUpdateCoordinator when a successful update runs.
-        self.device = self.coordinator.get_device_by_id(
-            self.device.device_type, self.device_id
+        self.device = self.coordinator.get_device_by_unique_id(
+            self.device.device_unique_id
         )
         _LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()
@@ -325,8 +325,8 @@ class CurrentSensor(CoordinatorEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Update sensor with latest data from coordinator."""
         # This method is called by your DataUpdateCoordinator when a successful update runs.
-        self.device = self.coordinator.get_device_by_id(
-            self.device.device_type, self.device_id
+        self.device = self.coordinator.get_device_by_unique_id(
+            self.device.device_unique_id
         )
         _LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()
@@ -396,8 +396,8 @@ class VoltageSensor(CoordinatorEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Update sensor with latest data from coordinator."""
         # This method is called by your DataUpdateCoordinator when a successful update runs.
-        self.device = self.coordinator.get_device_by_id(
-            self.device.device_type, self.device_id
+        self.device = self.coordinator.get_device_by_unique_id(
+            self.device.device_unique_id
         )
         _LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()
@@ -467,8 +467,8 @@ class PercentageSensor(CoordinatorEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Update sensor with latest data from coordinator."""
         # This method is called by your DataUpdateCoordinator when a successful update runs.
-        self.device = self.coordinator.get_device_by_id(
-            self.device.device_type, self.device_id
+        self.device = self.coordinator.get_device_by_unique_id(
+            self.device.device_unique_id
         )
         _LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()
@@ -539,8 +539,8 @@ class TemperatureSensor(CoordinatorEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Update sensor with latest data from coordinator."""
         # This method is called by your DataUpdateCoordinator when a successful update runs.
-        self.device = self.coordinator.get_device_by_id(
-            self.device.device_type, self.device_id
+        self.device = self.coordinator.get_device_by_unique_id(
+            self.device.device_unique_id
         )
         _LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()
@@ -611,8 +611,8 @@ class IntSensor(CoordinatorEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Update sensor with latest data from coordinator."""
         # This method is called by your DataUpdateCoordinator when a successful update runs.
-        self.device = self.coordinator.get_device_by_id(
-            self.device.device_type, self.device_id
+        self.device = self.coordinator.get_device_by_unique_id(
+            self.device.device_unique_id
         )
         _LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()
@@ -666,8 +666,8 @@ class StringSensor(CoordinatorEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Update sensor with latest data from coordinator."""
         # This method is called by your DataUpdateCoordinator when a successful update runs.
-        self.device = self.coordinator.get_device_by_id(
-            self.device.device_type, self.device_id
+        self.device = self.coordinator.get_device_by_unique_id(
+            self.device.device_unique_id
         )
         _LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()

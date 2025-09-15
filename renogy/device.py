@@ -87,7 +87,7 @@ class RenogyDevice(abc.ABC):
             if dev.is_main:
                 dev.attributes["mac"] = self.mac
                 dev.attributes["device_name"] = self.device_name.strip()
-                dev.attributes["friendly_name"] = self.name
+                dev.attributes["name"] = self.name
 
     # If you want to change this value, also change the controller_name in api.py
     @property
