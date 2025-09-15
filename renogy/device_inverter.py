@@ -33,11 +33,12 @@ class InverterDevice(RenogyDevice):
         self.NOTIFY_SERVICE_UUID = "0000fff1-0000-1000-8000-00805f9b34fb"
         self.WRITE_SERVICE_UUID = "0000ffd1-0000-1000-8000-00805f9b34fb"
         self.ha_device_name = "Renogy Inverter"
+        self.model = "Unknown"
 
         self.sections = [
+            {"register": 4311, "words": 8},
             {"register": 4000, "words": 10},
             {"register": 4109, "words": 1},
-            {"register": 4311, "words": 8},
             {"register": 4408, "words": 6},
             # {'register': 4327, 'words': 7},
         ]
@@ -47,11 +48,11 @@ class InverterDevice(RenogyDevice):
     ) -> list[RenogyDeviceData]:
         """Parse a section of data from the device."""
         if section_index == 0:
-            return self.parse_inverter_stats(bs)
+            return self.parse_inverter_model(bs)
         if section_index == 1:
             return self.parse_device_id(bs)
         if section_index == 2:
-            return self.parse_inverter_model(bs)
+            return self.parse_inverter_stats(bs)
         if section_index == 3:
             return self.parse_load_info(bs)
         # if section_index == 4:
@@ -61,18 +62,9 @@ class InverterDevice(RenogyDevice):
 
     def parse_inverter_model(self, bs):
         """Parse the inverter model from the device."""
-        ret_dev = []
-        entity_id = 1
-        dev = RenogyDeviceData(
-            device_id=1,
-            device_name=self.ha_device_name,
-            device_unique_id=self.device_unique_id + f"_{entity_id}",
-            device_type=RenogyDeviceType.STRING_DATA,
-            name="Model",
-            state=(bs[3:19]).decode("utf-8").rstrip("\x00"),
-        )
-        ret_dev.append(dev)
-        return ret_dev
+        self.model = (bs[3:19]).decode("utf-8").rstrip("\x00")
+
+        return []
 
     def parse_device_id(self, bs):
         """Parse the device ID from the device."""
@@ -85,6 +77,7 @@ class InverterDevice(RenogyDevice):
             device_type=RenogyDeviceType.INT_DATA,
             name="Device ID",
             state=bytes_to_int(bs, 3, 2),
+            attributes={},
         )
         ret_dev.append(dev)
         return ret_dev
@@ -100,6 +93,7 @@ class InverterDevice(RenogyDevice):
             device_type=RenogyDeviceType.VOLTAGE_SENSOR,
             name="Input Voltage",
             state=bytes_to_int(bs, 3, 2, scale=0.1),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -111,6 +105,7 @@ class InverterDevice(RenogyDevice):
             device_type=RenogyDeviceType.CURRENT_SENSOR,
             name="Input Current",
             state=bytes_to_int(bs, 5, 2, scale=0.01),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -122,6 +117,7 @@ class InverterDevice(RenogyDevice):
             device_type=RenogyDeviceType.VOLTAGE_SENSOR,
             name="Output Voltage",
             state=bytes_to_int(bs, 7, 2, scale=0.1),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -133,6 +129,8 @@ class InverterDevice(RenogyDevice):
             device_type=RenogyDeviceType.CURRENT_SENSOR,
             name="Output Current",
             state=bytes_to_int(bs, 9, 2, scale=0.01),
+            is_main=True,
+            attributes={"model": self.model},
         )
         ret_dev.append(dev)
 
@@ -144,6 +142,7 @@ class InverterDevice(RenogyDevice):
             device_type=RenogyDeviceType.INT_DATA,
             name="Output Frequency",
             state=bytes_to_int(bs, 11, 2, scale=0.01),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -155,6 +154,7 @@ class InverterDevice(RenogyDevice):
             device_type=RenogyDeviceType.VOLTAGE_SENSOR,
             name="Battery Voltage",
             state=bytes_to_int(bs, 13, 2, scale=0.1),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -166,6 +166,7 @@ class InverterDevice(RenogyDevice):
             device_type=RenogyDeviceType.TEMPERATURE_SENSOR,
             name="Battery Temperature",
             state=bytes_to_int(bs, 15, 2, scale=0.1),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -177,6 +178,7 @@ class InverterDevice(RenogyDevice):
             device_type=RenogyDeviceType.INT_DATA,
             name="Input Frequency",
             state=bytes_to_int(bs, 21, 2, scale=0.01),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -274,6 +276,7 @@ class InverterDevice(RenogyDevice):
             device_type=RenogyDeviceType.CURRENT_SENSOR,
             name="Load Current",
             state=bytes_to_int(bs, 3, 2, scale=0.1),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -285,6 +288,7 @@ class InverterDevice(RenogyDevice):
             device_type=RenogyDeviceType.POWER_SENSOR,
             name="Load Active Power",
             state=bytes_to_int(bs, 5, 2),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -296,6 +300,7 @@ class InverterDevice(RenogyDevice):
             device_type=RenogyDeviceType.POWER_SENSOR,
             name="Load Apparent Power",
             state=bytes_to_int(bs, 7, 2),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -318,6 +323,7 @@ class InverterDevice(RenogyDevice):
             device_type=RenogyDeviceType.PERCENTAGE,
             name="Load Percentage",
             state=bytes_to_int(bs, 13, 2),
+            attributes={},
         )
         ret_dev.append(dev)
 

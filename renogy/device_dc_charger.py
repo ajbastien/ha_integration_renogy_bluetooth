@@ -36,13 +36,16 @@ class DCChargerDevice(RenogyDevice):
         self.NOTIFY_SERVICE_UUID = "0000fff1-0000-1000-8000-00805f9b34fb"
         self.WRITE_SERVICE_UUID = "0000ffd1-0000-1000-8000-00805f9b34fb"
         self.ha_device_name = "Renogy DC-DC Charger"
+        self.model = "Unknown"
+        self.state = "Unknown"
+        self.battery_type = "Unknown"
 
         self.sections = [
             {"register": 12, "words": 8},
             {"register": 26, "words": 1},
-            {"register": 256, "words": 30},
             {"register": 288, "words": 3},
             {"register": 57348, "words": 1},
+            {"register": 256, "words": 30},
         ]
 
     def parse_section(
@@ -54,28 +57,18 @@ class DCChargerDevice(RenogyDevice):
         if section_index == 1:
             return self.parse_device_address(bs)
         if section_index == 2:
-            return self.parse_charging_info(bs)
-        if section_index == 3:
             return self.parse_state(bs)
-        if section_index == 4:
+        if section_index == 3:
             return self.parse_battery_type(bs)
+        if section_index == 4:
+            return self.parse_charging_info(bs)
 
         return []
 
     def parse_device_info(self, bs):
         """Parse device information from the device."""
-        ret_dev = []
-        entity_id = 1
-        dev = RenogyDeviceData(
-            device_id=1,
-            device_name=self.ha_device_name,
-            device_unique_id=self.device_unique_id + f"_{entity_id}",
-            device_type=RenogyDeviceType.STRING_DATA,
-            name="Model",
-            state=(bs[3:19]).decode("utf-8").strip(),
-        )
-        ret_dev.append(dev)
-        return ret_dev
+        self.model = (bs[3:19]).decode("utf-8").strip()
+        return []
 
     def parse_device_address(self, bs):
         """Parse the device address from the device."""
@@ -88,6 +81,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.INT_DATA,
             name="Device ID",
             state=bytes_to_int(bs, 4, 1),
+            attributes={},
         )
         ret_dev.append(dev)
         return ret_dev
@@ -103,6 +97,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.PERCENTAGE,
             name="Battery Percent",
             state=bytes_to_int(bs, 3, 2),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -114,6 +109,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.VOLTAGE_SENSOR,
             name="Battery Voltage",
             state=bytes_to_int(bs, 5, 2, scale=0.1),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -125,6 +121,12 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.CURRENT_SENSOR,
             name="Combined Charge Current",
             state=bytes_to_int(bs, 7, 2, scale=0.01),
+            is_main=True,
+            attributes={
+                "model": self.model,
+                "state": self.state,
+                "battery_type": self.battery_type,
+            },
         )
         ret_dev.append(dev)
 
@@ -136,6 +138,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.TEMPERATURE_SENSOR,
             name="Controller Temperature",
             state=bytes_to_int(bs, 9, 1),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -147,6 +150,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.TEMPERATURE_SENSOR,
             name="Battery Temperature",
             state=bytes_to_int(bs, 10, 1),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -158,6 +162,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.VOLTAGE_SENSOR,
             name="Alternator Voltage",
             state=bytes_to_int(bs, 11, 2, scale=0.1),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -169,6 +174,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.CURRENT_SENSOR,
             name="Alternator Current",
             state=bytes_to_int(bs, 13, 2, scale=0.01),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -180,6 +186,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.POWER_SENSOR,
             name="Alternator Power",
             state=bytes_to_int(bs, 15, 2),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -191,6 +198,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.VOLTAGE_SENSOR,
             name="Solar Voltage",
             state=bytes_to_int(bs, 17, 2, scale=0.1),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -202,6 +210,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.CURRENT_SENSOR,
             name="Solar Current",
             state=bytes_to_int(bs, 19, 2, scale=0.01),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -213,6 +222,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.POWER_SENSOR,
             name="Solar Power",
             state=bytes_to_int(bs, 21, 2),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -224,6 +234,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.VOLTAGE_SENSOR,
             name="Batt Min Voltage Today",
             state=bytes_to_int(bs, 25, 2, scale=0.1),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -235,6 +246,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.VOLTAGE_SENSOR,
             name="Batt Max Voltage Today",
             state=bytes_to_int(bs, 27, 2, scale=0.1),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -246,6 +258,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.CURRENT_SENSOR,
             name="Batt Max Current Today",
             state=bytes_to_int(bs, 29, 2, scale=0.01),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -257,6 +270,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.POWER_SENSOR,
             name="Batt Charging Power Today",
             state=bytes_to_int(bs, 33, 2),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -268,6 +282,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.AMP_HOURS_SENSOR,
             name="Charging Amp Hours Today",
             state=bytes_to_int(bs, 37, 2),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -279,6 +294,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.ENERGY_STORAGE,
             name="Power Generation Today",
             state=bytes_to_int(bs, 41, 2),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -290,6 +306,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.INT_DATA,
             name="Total Working Days",
             state=bytes_to_int(bs, 45, 2),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -301,6 +318,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.INT_DATA,
             name="Count Battery Overdischarged",
             state=bytes_to_int(bs, 47, 2),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -312,6 +330,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.INT_DATA,
             name="Count Battery Fully Charged",
             state=bytes_to_int(bs, 49, 2),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -323,6 +342,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.AMP_HOURS_SENSOR,
             name="Total Battery AH Accumulated",
             state=bytes_to_int(bs, 51, 4),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -334,6 +354,7 @@ class DCChargerDevice(RenogyDevice):
             device_type=RenogyDeviceType.ENERGY_STORAGE,
             name="Power Generation Total",
             state=bytes_to_int(bs, 59, 4),
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -341,33 +362,12 @@ class DCChargerDevice(RenogyDevice):
 
     def parse_battery_type(self, bs):
         """Parse battery type from the device."""
-        ret_dev = []
-        entity_id = 25
-        dev = RenogyDeviceData(
-            device_id=2,
-            device_name="Main Battery",
-            device_unique_id=self.device_unique_id + f"_{entity_id}",
-            device_type=RenogyDeviceType.STRING_DATA,
-            name="Battery Type",
-            state=BATTERY_TYPE.get(bytes_to_int(bs, 3, 2)),
-        )
-        ret_dev.append(dev)
-
-        return ret_dev
+        self.battery_type = BATTERY_TYPE.get(bytes_to_int(bs, 3, 2))
+        return []
 
     def parse_state(self, bs):
         """Parse device state from the device."""
-        ret_dev = []
-        entity_id = 26
-        dev = RenogyDeviceData(
-            device_id=1,
-            device_name=self.ha_device_name,
-            device_unique_id=self.device_unique_id + f"_{entity_id}",
-            device_type=RenogyDeviceType.STRING_DATA,
-            name="Charging Status",
-            state=CHARGING_STATE.get(bytes_to_int(bs, 2, 1)),
-        )
-        ret_dev.append(dev)
+        self.state = CHARGING_STATE.get(bytes_to_int(bs, 2, 1))
 
         # alarms = {}
 
@@ -392,4 +392,4 @@ class DCChargerDevice(RenogyDevice):
         # key = next((key for key, value in alarms.items() if value > 0), None)
         # if (key != None): data['error'] = key
 
-        return ret_dev
+        return []

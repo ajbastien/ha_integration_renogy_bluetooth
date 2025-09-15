@@ -51,7 +51,10 @@ class TestDevice(RenogyDevice):
             device_type=RenogyDeviceType.PERCENTAGE,
             name="Main Battery Percent",
             state=85.2,
+            is_main=True,
+            attributes={"model": "SmartShunt300"},
         )
+
         ret_dev.append(dev)
 
         volts = 13.6
@@ -63,6 +66,7 @@ class TestDevice(RenogyDevice):
             device_type=RenogyDeviceType.VOLTAGE_SENSOR,
             name="Main Battery Voltage",
             state=volts,
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -74,6 +78,7 @@ class TestDevice(RenogyDevice):
             device_type=RenogyDeviceType.VOLTAGE_SENSOR,
             name="Starter Battery Voltage",
             state=12.6,
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -86,6 +91,7 @@ class TestDevice(RenogyDevice):
             device_type=RenogyDeviceType.CURRENT_SENSOR,
             name="Charge Amps",
             state=amps,
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -97,6 +103,7 @@ class TestDevice(RenogyDevice):
             device_type=RenogyDeviceType.POWER_SENSOR,
             name="Charge Watts",
             state=volts * amps,
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -108,6 +115,7 @@ class TestDevice(RenogyDevice):
             device_type=RenogyDeviceType.TEMPERATURE_SENSOR,
             name="Main Battery Temperature",
             state=12.1,
+            attributes={},
         )
         ret_dev.append(dev)
 

@@ -92,12 +92,12 @@ class API:
         if len(devicesRet) == 0:
             _LOGGER.error("Getting 0 devices from api: %s", self.mac)
             raise APIConnectionError(
-                    f"Could get entities from Renogy device with address {self.mac}"
-                )
-        else:
-            _LOGGER.debug("Getting devices from api: %s", devicesRet)
-            self.lastUpdateValid = True
-        
+                f"Could get entities from Renogy device with address {self.mac}"
+            )
+
+        _LOGGER.debug("Getting devices from api: %s", devicesRet)
+        self.lastUpdateValid = True
+
         return devicesRet
 
 

@@ -48,6 +48,8 @@ class ShuntDevice(RenogyDevice):
             device_type=RenogyDeviceType.PERCENTAGE,
             name="Main Battery Percent",
             state=bytes_to_int(bs, 34, 2, scale=0.1),  # 0xA6 (#1),
+            is_main=True,
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -60,6 +62,7 @@ class ShuntDevice(RenogyDevice):
             device_type=RenogyDeviceType.VOLTAGE_SENSOR,
             name="Main Battery Voltage",
             state=volts,
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -71,6 +74,7 @@ class ShuntDevice(RenogyDevice):
             device_type=RenogyDeviceType.VOLTAGE_SENSOR,
             name="Starter Battery Voltage",
             state=bytes_to_int(bs, 30, 2, scale=0.001),  # 0xA6 (#2)
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -83,6 +87,7 @@ class ShuntDevice(RenogyDevice):
             device_type=RenogyDeviceType.CURRENT_SENSOR,
             name="Charge Amps",
             state=amps,
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -94,6 +99,7 @@ class ShuntDevice(RenogyDevice):
             device_type=RenogyDeviceType.POWER_SENSOR,
             name="Charge Watts",
             state=volts * amps,
+            attributes={},
         )
         ret_dev.append(dev)
 
@@ -105,6 +111,7 @@ class ShuntDevice(RenogyDevice):
             device_type=RenogyDeviceType.TEMPERATURE_SENSOR,
             name="Main Battery Temperature",
             state=bytes_to_int(bs, 66, 2, scale=0.1),  # 0xAD (#3
+            attributes={},
         )
         ret_dev.append(dev)
 

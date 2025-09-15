@@ -109,6 +109,4 @@ class BinarySensor1(CoordinatorEntity, BinarySensorEntity):
     def extra_state_attributes(self):
         """Return the extra state attributes."""
         # Add any additional attributes you want on your sensor.
-        attrs = {}
-        attrs["extra_info"] = "Extra Info"
-        return attrs
+        return self.device.attributes

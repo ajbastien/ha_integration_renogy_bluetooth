@@ -45,6 +45,8 @@ class RenogyDeviceData:
     device_type: RenogyDeviceType
     name: str
     state: str | float | int | bool
+    is_main: bool = False  # True if this is the main entity for the device
+    attributes: dict = None  # Additional attributes for the entity
 
 
 class RenogyDevice(abc.ABC):
@@ -80,38 +82,12 @@ class RenogyDevice(abc.ABC):
         """
 
         _LOGGER.debug("Adding basic device info entities")
-        entity_id = 90
-        dev = RenogyDeviceData(
-            device_id=1,
-            device_name=self.ha_device_name,
-            device_unique_id=self.device_unique_id + f"_{entity_id}",
-            device_type=RenogyDeviceType.STRING_DATA,
-            name="MAC Address",
-            state=self.mac,
-        )
-        self.ret_dev_data.append(dev)
 
-        entity_id = 91
-        dev = RenogyDeviceData(
-            device_id=1,
-            device_name=self.ha_device_name,
-            device_unique_id=self.device_unique_id + f"_{entity_id}",
-            device_type=RenogyDeviceType.STRING_DATA,
-            name="Device Name",
-            state=self.device_name.strip(),
-        )
-        self.ret_dev_data.append(dev)
-
-        entity_id = 92
-        dev = RenogyDeviceData(
-            device_id=1,
-            device_name=self.ha_device_name,
-            device_unique_id=self.device_unique_id + f"_{entity_id}",
-            device_type=RenogyDeviceType.STRING_DATA,
-            name="Friendly Name",
-            state=self.name,
-        )
-        self.ret_dev_data.append(dev)
+        for dev in self.ret_dev_data:
+            if dev.is_main:
+                dev.attributes["mac"] = self.mac
+                dev.attributes["device_name"] = self.device_name.strip()
+                dev.attributes["friendly_name"] = self.name
 
     # If you want to change this value, also change the controller_name in api.py
     @property
@@ -179,20 +155,6 @@ class RenogyDevice(abc.ABC):
             self.WRITE_SERVICE_UUID, bytearray(request), response=False
         )
 
-    async def execute(self, ble_device: BLEDevice) -> list[RenogyDeviceData]:
-        """Execute the BLE communication with timeout handling."""
-        #try:
-        #    async with asyncio.timeout(40):  # Set a 40-second timeout
-        #        return await self.execute2(ble_device)
-        #except TimeoutError:
-        #    _LOGGER.warning("Timeout occurred! Task was cancelled")
-        #    if self.client is not None:
-        #        await self.client.disconnect()
-
-        return await self.execute2(ble_device)
-
-        #return []
-
     async def printServices(self, client: BleakClient):
         """Print all services, characteristics, and descriptors of the BLE device."""
         services = client.services
@@ -203,7 +165,7 @@ class RenogyDevice(abc.ABC):
                 for desc in char.descriptors:
                     _LOGGER.debug("    -> Descriptor: %s", desc)
 
-    async def execute2(self, ble_device: BLEDevice) -> list[RenogyDeviceData]:
+    async def execute(self, ble_device: BLEDevice) -> list[RenogyDeviceData]:
         """Execute the BLE communication."""
         self.client = None
 
@@ -215,7 +177,8 @@ class RenogyDevice(abc.ABC):
 
                 _LOGGER.debug("Connecting to device %s", ble_device.address)
                 self.client = await establish_connection(
-                    BleakClient, ble_device, ble_device.address)
+                    BleakClient, ble_device, ble_device.address
+                )
 
                 if not self.client.is_connected:
                     _LOGGER.error("Failed to connect to device %s", ble_device.address)

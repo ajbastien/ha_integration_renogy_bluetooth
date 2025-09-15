@@ -160,13 +160,11 @@ class PowerSensor(CoordinatorEntity, SensorEntity):
         # changing it later will cause HA to create new entities.
         return f"{DOMAIN}-{self.device.device_unique_id}"
 
-    # @property
-    # def extra_state_attributes(self):
-    #     """Return the extra state attributes."""
-    #     # Add any additional attributes you want on your sensor.
-    #     attrs = {}
-    #     # attrs["extra_info"] = "Extra Info"
-    #     return attrs
+    @property
+    def extra_state_attributes(self):
+        """Return the extra state attributes."""
+        # Add any additional attributes you want on your sensor.
+        return self.device.attributes
 
 
 class EnergyStorageSensor(CoordinatorEntity, SensorEntity):
@@ -233,13 +231,11 @@ class EnergyStorageSensor(CoordinatorEntity, SensorEntity):
         # changing it later will cause HA to create new entities.
         return f"{DOMAIN}-{self.device.device_unique_id}"
 
-    # @property
-    # def extra_state_attributes(self):
-    #     """Return the extra state attributes."""
-    #     # Add any additional attributes you want on your sensor.
-    #     attrs = {}
-    #     # attrs["extra_info"] = "Extra Info"
-    #     return attrs
+    @property
+    def extra_state_attributes(self):
+        """Return the extra state attributes."""
+        # Add any additional attributes you want on your sensor.
+        return self.device.attributes
 
 
 class AmpHourSensor(CoordinatorEntity, SensorEntity):
@@ -306,13 +302,11 @@ class AmpHourSensor(CoordinatorEntity, SensorEntity):
         # changing it later will cause HA to create new entities.
         return f"{DOMAIN}-{self.device.device_unique_id}"
 
-    # @property
-    # def extra_state_attributes(self):
-    #     """Return the extra state attributes."""
-    #     # Add any additional attributes you want on your sensor.
-    #     attrs = {}
-    #     # attrs["extra_info"] = "Extra Info"
-    #     return attrs
+    @property
+    def extra_state_attributes(self):
+        """Return the extra state attributes."""
+        # Add any additional attributes you want on your sensor.
+        return self.device.attributes
 
 
 class CurrentSensor(CoordinatorEntity, SensorEntity):
@@ -379,13 +373,11 @@ class CurrentSensor(CoordinatorEntity, SensorEntity):
         # changing it later will cause HA to create new entities.
         return f"{DOMAIN}-{self.device.device_unique_id}"
 
-    # @property
-    # def extra_state_attributes(self):
-    #     """Return the extra state attributes."""
-    #     # Add any additional attributes you want on your sensor.
-    #     attrs = {}
-    #     # attrs["extra_info"] = "Extra Info"
-    #     return attrs
+    @property
+    def extra_state_attributes(self):
+        """Return the extra state attributes."""
+        # Add any additional attributes you want on your sensor.
+        return self.device.attributes
 
 
 class VoltageSensor(CoordinatorEntity, SensorEntity):
@@ -452,13 +444,11 @@ class VoltageSensor(CoordinatorEntity, SensorEntity):
         # changing it later will cause HA to create new entities.
         return f"{DOMAIN}-{self.device.device_unique_id}"
 
-    # @property
-    # def extra_state_attributes(self):
-    #     """Return the extra state attributes."""
-    #     # Add any additional attributes you want on your sensor.
-    #     attrs = {}
-    #     # attrs["extra_info"] = "Extra Info"
-    #     return attrs
+    @property
+    def extra_state_attributes(self):
+        """Return the extra state attributes."""
+        # Add any additional attributes you want on your sensor.
+        return self.device.attributes
 
 
 class PercentageSensor(CoordinatorEntity, SensorEntity):
@@ -525,13 +515,11 @@ class PercentageSensor(CoordinatorEntity, SensorEntity):
         # changing it later will cause HA to create new entities.
         return f"{DOMAIN}-{self.device.device_unique_id}"
 
-    # @property
-    # def extra_state_attributes(self):
-    #     """Return the extra state attributes."""
-    #     # Add any additional attributes you want on your sensor.
-    #     attrs = {}
-    #     # attrs["extra_info"] = "Extra Info"
-    #     return attrs
+    @property
+    def extra_state_attributes(self):
+        """Return the extra state attributes."""
+        # Add any additional attributes you want on your sensor.
+        return self.device.attributes
 
 
 class TemperatureSensor(CoordinatorEntity, SensorEntity):
@@ -599,13 +587,11 @@ class TemperatureSensor(CoordinatorEntity, SensorEntity):
         # changing it later will cause HA to create new entities.
         return f"{DOMAIN}-{self.device.device_unique_id}"
 
-    # @property
-    # def extra_state_attributes(self):
-    #     """Return the extra state attributes."""
-    #     # Add any additional attributes you want on your sensor.
-    #     attrs = {}
-    #     # attrs["extra_info"] = "Extra Info"
-    #     return attrs
+    @property
+    def extra_state_attributes(self):
+        """Return the extra state attributes."""
+        # Add any additional attributes you want on your sensor.
+        return self.device.attributes
 
 
 class IntSensor(CoordinatorEntity, SensorEntity):
@@ -656,13 +642,11 @@ class IntSensor(CoordinatorEntity, SensorEntity):
         # changing it later will cause HA to create new entities.
         return f"{DOMAIN}-{self.device.device_unique_id}"
 
-    # @property
-    # def extra_state_attributes(self):
-    #     """Return the extra state attributes."""
-    #     # Add any additional attributes you want on your sensor.
-    #     attrs = {}
-    #     # attrs["extra_info"] = "Extra Info"
-    #     return attrs
+    @property
+    def extra_state_attributes(self):
+        """Return the extra state attributes."""
+        # Add any additional attributes you want on your sensor.
+        return self.device.attributes
 
 
 class StringSensor(CoordinatorEntity, SensorEntity):
@@ -717,6 +701,4 @@ class StringSensor(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self):
         """Return the extra state attributes."""
         # Add any additional attributes you want on your sensor.
-        attrs = {}
-        attrs["str_len"] = len(self.device.state)
-        return attrs
+        return self.device.attributes
