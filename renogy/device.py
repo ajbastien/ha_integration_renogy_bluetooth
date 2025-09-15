@@ -1,0 +1,272 @@
+"""Renogy Bluetooth device abstraction and BLE communication.
+
+This module defines the base classes and utilities for Renogy Bluetooth devices,
+including BLE communication logic, device data models, and abstract parsing methods.
+"""
+
+import abc
+import asyncio
+from dataclasses import dataclass
+from enum import StrEnum
+import logging
+import traceback
+
+from bleak import BleakClient, BleakGATTCharacteristic
+from bleak.backends.device import BLEDevice
+from bleak_retry_connector import establish_connection
+
+from .utils import bytes_to_int, crc16_modbus, int_to_bytes
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class RenogyDeviceType(StrEnum):
+    """Device types."""
+
+    TEMPERATURE_SENSOR = "temperature_sensor"
+    DOOR_SENSOR = "door_sensor"
+    VOLTAGE_SENSOR = "voltage_sensor"
+    CURRENT_SENSOR = "current_sensor"
+    AMP_HOURS_SENSOR = "amp_hours_sensor"
+    POWER_SENSOR = "power_sensor"
+    ENERGY_STORAGE = "energy_storage"
+    PERCENTAGE = "percentage"
+    STRING_DATA = "string_data"
+    INT_DATA = "int_data"
+
+
+@dataclass
+class RenogyDeviceData:
+    """API device."""
+
+    device_id: int
+    device_name: str
+    device_unique_id: str
+    device_type: RenogyDeviceType
+    name: str
+    state: str | float | int | bool
+
+
+class RenogyDevice(abc.ABC):
+    """Abstract base class for Renogy Bluetooth devices.
+
+    Handles BLE communication, data parsing, and device metadata for Renogy sensors.
+    Child classes must implement the parse_section method to extract device-specific data.
+    """
+
+    def __init__(self, mac: str, device_name: str, name: str, device_type: str) -> None:
+        """Initialise."""
+        self.mac = mac
+        self.device_name = device_name
+        self.ha_device_name = "Default Device Name"
+        self.name = name
+        self.device_type = device_type
+        self.function = 3
+        self.device_id = 255
+        self.sections = []
+        self.section_index = 0
+        self._notification_event = asyncio.Event()  # Add event
+        self.ret_dev_data = []
+        self.NOTIFY_SERVICE_UUID = None
+        self.WRITE_SERVICE_UUID = None
+        self.READ_OPERATION = 3
+        self.client = None
+
+    def add_devices(self) -> None:
+        """Add basic device information entities to the device data list.
+
+        This method appends entities for MAC address, device name, and friendly name
+        to the ret_dev_data list for Home Assistant entity creation.
+        """
+
+        _LOGGER.debug("Adding basic device info entities")
+        entity_id = 90
+        dev = RenogyDeviceData(
+            device_id=1,
+            device_name=self.ha_device_name,
+            device_unique_id=self.device_unique_id + f"_{entity_id}",
+            device_type=RenogyDeviceType.STRING_DATA,
+            name="MAC Address",
+            state=self.mac,
+        )
+        self.ret_dev_data.append(dev)
+
+        entity_id = 91
+        dev = RenogyDeviceData(
+            device_id=1,
+            device_name=self.ha_device_name,
+            device_unique_id=self.device_unique_id + f"_{entity_id}",
+            device_type=RenogyDeviceType.STRING_DATA,
+            name="Device Name",
+            state=self.device_name.strip(),
+        )
+        self.ret_dev_data.append(dev)
+
+        entity_id = 92
+        dev = RenogyDeviceData(
+            device_id=1,
+            device_name=self.ha_device_name,
+            device_unique_id=self.device_unique_id + f"_{entity_id}",
+            device_type=RenogyDeviceType.STRING_DATA,
+            name="Friendly Name",
+            state=self.name,
+        )
+        self.ret_dev_data.append(dev)
+
+    # If you want to change this value, also change the controller_name in api.py
+    @property
+    def device_unique_id(self) -> str:
+        """Return the name of the controller."""
+        return "renogy_" + self.mac.lower().replace(":", "_") + "_id"
+
+    async def notification_callback(
+        self, characteristic: BleakGATTCharacteristic, data: bytearray
+    ):
+        """Handle notifications from the BLE device."""
+        operation = bytes_to_int(data, 1, 1)
+        _LOGGER.debug(
+            "notification_callback %d - %d - %s",
+            operation,
+            self.section_index,
+            data.hex(),
+        )
+
+        if operation == self.READ_OPERATION:
+            self.ret_dev_data.extend(self.parse_section(data, self.section_index))
+            # _LOGGER.debug("ret_dev_data: %s", self.ret_dev_data)
+
+            self._notification_event.set()  # Trigger event
+        else:
+            _LOGGER.debug(
+                "Unknown operation response received, ignoring for now.  Looking for %d %d",
+                self.READ_OPERATION,
+                len(self.sections),
+            )
+
+    def create_generic_read_request(self, device_id, function, regAddr, readWrd):
+        """Create a generic read request payload."""
+        data = None
+        if regAddr is not None and readWrd is not None:
+            data = []
+            data.append(device_id)
+            data.append(function)
+            data.append(int_to_bytes(regAddr, 0))
+            data.append(int_to_bytes(regAddr, 1))
+            data.append(int_to_bytes(readWrd, 0))
+            data.append(int_to_bytes(readWrd, 1))
+
+            crc = crc16_modbus(bytes(data))
+            data.append(crc[0])
+            data.append(crc[1])
+            _LOGGER.debug("create_request_payload %s => %s", regAddr, data)
+        return data
+
+    async def read_section(self, client: BleakClient):
+        """Read a section of data from the BLE device."""
+        index = self.section_index
+        if len(self.sections) == 0:
+            _LOGGER.error("RenogyDevice cannot be used directly")
+
+        self._notification_event.clear()  # Reset event before sending request
+
+        request = self.create_generic_read_request(
+            self.device_id,
+            self.function,
+            self.sections[index]["register"],
+            self.sections[index]["words"],
+        )
+        await client.write_gatt_char(
+            self.WRITE_SERVICE_UUID, bytearray(request), response=False
+        )
+
+    async def execute(self, ble_device: BLEDevice) -> list[RenogyDeviceData]:
+        """Execute the BLE communication with timeout handling."""
+        #try:
+        #    async with asyncio.timeout(40):  # Set a 40-second timeout
+        #        return await self.execute2(ble_device)
+        #except TimeoutError:
+        #    _LOGGER.warning("Timeout occurred! Task was cancelled")
+        #    if self.client is not None:
+        #        await self.client.disconnect()
+
+        return await self.execute2(ble_device)
+
+        #return []
+
+    async def printServices(self, client: BleakClient):
+        """Print all services, characteristics, and descriptors of the BLE device."""
+        services = client.services
+        for service in services:
+            _LOGGER.debug("Service: %s", service)
+            for char in service.characteristics:
+                _LOGGER.debug("  -> Characteristic: %s", char)
+                for desc in char.descriptors:
+                    _LOGGER.debug("    -> Descriptor: %s", desc)
+
+    async def execute2(self, ble_device: BLEDevice) -> list[RenogyDeviceData]:
+        """Execute the BLE communication."""
+        self.client = None
+
+        try:
+            if self.WRITE_SERVICE_UUID != "TEST":
+                if self.NOTIFY_SERVICE_UUID is None:
+                    _LOGGER.error("No NOTIFY_SERVICE_UUID defined")
+                    return []
+
+                _LOGGER.debug("Connecting to device %s", ble_device.address)
+                self.client = await establish_connection(
+                    BleakClient, ble_device, ble_device.address)
+
+                if not self.client.is_connected:
+                    _LOGGER.error("Failed to connect to device %s", ble_device.address)
+                    self._raise_connection_error(ble_device.address)
+
+                await self.printServices(self.client)
+
+                _LOGGER.debug("Starting Notification for %s", self.NOTIFY_SERVICE_UUID)
+                await self.client.start_notify(
+                    self.NOTIFY_SERVICE_UUID, self.notification_callback
+                )
+
+                while self.section_index < len(self.sections):
+                    if self.WRITE_SERVICE_UUID is not None:
+                        await self.read_section(self.client)
+
+                    # Wait for notification before disconnecting
+                    await asyncio.wait_for(
+                        self._notification_event.wait(), timeout=10
+                    )  # Adjust timeout as needed
+
+                    self.section_index += 1
+
+                await self.client.disconnect()
+            else:
+                _LOGGER.warning("Simulated device - no BLE actions")
+                self.ret_dev_data.extend(
+                    self.parse_section(bytearray(), self.section_index)
+                )
+                # _LOGGER.debug("ret_dev_data: %s", self.ret_dev_data)
+
+        except Exception as e:  # noqa: BLE001
+            _LOGGER.error("Error processing device: %s", e)
+            traceback.print_exc()
+            if self.client is not None:
+                await self.client.disconnect()
+            return []
+
+        self.add_devices()
+
+        return self.ret_dev_data
+
+    @abc.abstractmethod
+    def parse_section(
+        self, bs: bytearray, section_index: int
+    ) -> list[RenogyDeviceData]:
+        """Parse the section data. Must be implemented in child classes."""
+
+    def _raise_connection_error(self, address: str) -> None:
+        raise DeviceConnectionError(f"Failed to connect to device {address}")
+
+
+class DeviceConnectionError(Exception):
+    """Exception class for connection error."""
