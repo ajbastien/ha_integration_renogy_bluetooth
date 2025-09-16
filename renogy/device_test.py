@@ -26,19 +26,18 @@ class TestDevice(RenogyDevice):
 
         self.sections = [{"register": 256, "words": 110}]
 
-    def parse_section(
-        self, bs: bytearray, section_index: int
-    ) -> list[RenogyDeviceData]:
+    def parse_section(self, bs: bytearray, section_index: int) -> dict:
         """Parse a section of data from the device."""
         _LOGGER.debug(
-            "parse_section called with section_index: %s and data: %s",
+            "parse_section called with section_index: %d and data: (%d) %s",
             section_index,
+            len(bs),
             bs.hex(),
         )
         if (
             section_index != 0 or not self.first_parse
         ):  # The shunt sends many notifications in a row, we only need the first one
-            return []
+            return {"valid": False, "entities": []}
 
         self.first_parse = False
 
@@ -119,4 +118,17 @@ class TestDevice(RenogyDevice):
         )
         ret_dev.append(dev)
 
-        return ret_dev
+        volts = 12.45
+        entity_id = 7
+        dev = RenogyDeviceData(
+            device_id=1,
+            device_name=self.ha_device_name,
+            device_unique_id=self.device_unique_id + f"_{entity_id}",
+            device_type=RenogyDeviceType.VOLTAGE_SENSOR,
+            name="Main Battery Voltage (Test)",
+            state=volts,
+            attributes={"test_attribute": "test_value"},
+        )
+        ret_dev.append(dev)
+
+        return {"valid": True, "entities": ret_dev}

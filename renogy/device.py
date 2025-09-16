@@ -87,7 +87,7 @@ class RenogyDevice(abc.ABC):
             if dev.is_main:
                 dev.attributes["mac"] = self.mac
                 dev.attributes["device_name"] = self.device_name.strip()
-                dev.attributes["name"] = self.name
+                dev.attributes["device_name_2"] = self.name
 
     # If you want to change this value, also change the controller_name in api.py
     @property
@@ -101,17 +101,19 @@ class RenogyDevice(abc.ABC):
         """Handle notifications from the BLE device."""
         operation = bytes_to_int(data, 1, 1)
         _LOGGER.debug(
-            "notification_callback %d - %d - %s",
+            "notification_callback %d - %d l:%d - %s",
             operation,
             self.section_index,
+            len(data),
             data.hex(),
         )
 
         if operation == self.READ_OPERATION:
-            self.ret_dev_data.extend(self.parse_section(data, self.section_index))
-            # _LOGGER.debug("ret_dev_data: %s", self.ret_dev_data)
-
-            self._notification_event.set()  # Trigger event
+            items = self.parse_section(data, self.section_index)
+            if items["valid"]:
+                self.ret_dev_data.extend(items["entities"])
+                # _LOGGER.debug("ret_dev_data: %s", self.ret_dev_data)
+                self._notification_event.set()  # Trigger event
         else:
             _LOGGER.debug(
                 "Unknown operation response received, ignoring for now.  Looking for %d %d",
@@ -184,7 +186,7 @@ class RenogyDevice(abc.ABC):
                     _LOGGER.error("Failed to connect to device %s", ble_device.address)
                     self._raise_connection_error(ble_device.address)
 
-                await self.printServices(self.client)
+                # await self.printServices(self.client)
 
                 _LOGGER.debug("Starting Notification for %s", self.NOTIFY_SERVICE_UUID)
                 await self.client.start_notify(
@@ -205,9 +207,12 @@ class RenogyDevice(abc.ABC):
                 await self.client.disconnect()
             else:
                 _LOGGER.warning("Simulated device - no BLE actions")
-                self.ret_dev_data.extend(
-                    self.parse_section(bytearray(), self.section_index)
-                )
+                items = self.parse_section(b"ab232", self.section_index)
+                _LOGGER.debug("items: %s", items)
+                if items["valid"]:
+                    self.ret_dev_data.extend(items["entities"])
+                    _LOGGER.debug("ret_dev_data: %s", self.ret_dev_data)
+                    self._notification_event.set()  # Trigger event
                 # _LOGGER.debug("ret_dev_data: %s", self.ret_dev_data)
 
         except Exception as e:  # noqa: BLE001
@@ -222,9 +227,7 @@ class RenogyDevice(abc.ABC):
         return self.ret_dev_data
 
     @abc.abstractmethod
-    def parse_section(
-        self, bs: bytearray, section_index: int
-    ) -> list[RenogyDeviceData]:
+    def parse_section(self, bs: bytearray, section_index: int) -> dict:
         """Parse the section data. Must be implemented in child classes."""
 
     def _raise_connection_error(self, address: str) -> None:

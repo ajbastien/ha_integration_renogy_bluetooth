@@ -43,9 +43,7 @@ class InverterDevice(RenogyDevice):
             # {'register': 4327, 'words': 7},
         ]
 
-    def parse_section(
-        self, bs: bytearray, section_index: int
-    ) -> list[RenogyDeviceData]:
+    def parse_section(self, bs: bytearray, section_index: int) -> dict:
         """Parse a section of data from the device."""
         if section_index == 0:
             return self.parse_inverter_model(bs)
@@ -58,13 +56,13 @@ class InverterDevice(RenogyDevice):
         # if section_index == 4:
         #     return self.parse_charging_info(bs)
 
-        return []
+        return {"valid": False, "entities": []}
 
     def parse_inverter_model(self, bs):
         """Parse the inverter model from the device."""
         self.model = (bs[3:19]).decode("utf-8").rstrip("\x00")
 
-        return []
+        return {"valid": True, "entities": []}
 
     def parse_device_id(self, bs):
         """Parse the device ID from the device."""
@@ -80,7 +78,7 @@ class InverterDevice(RenogyDevice):
             attributes={},
         )
         ret_dev.append(dev)
-        return ret_dev
+        return {"valid": True, "entities": ret_dev}
 
     def parse_inverter_stats(self, bs):
         """Parse inverter statistics from the device."""
@@ -182,7 +180,7 @@ class InverterDevice(RenogyDevice):
         )
         ret_dev.append(dev)
 
-        return ret_dev
+        return {"valid": True, "entities": ret_dev}
 
     # def parse_charging_info(self, bs):
     #     ret_dev = []
@@ -263,7 +261,7 @@ class InverterDevice(RenogyDevice):
     #         )
     #     ret_dev.append(dev)
 
-    #     return ret_dev
+    #     return {"valid": True, "entities": ret_dev}
 
     def parse_load_info(self, bs):
         """Parse load information from the device."""
@@ -327,4 +325,4 @@ class InverterDevice(RenogyDevice):
         )
         ret_dev.append(dev)
 
-        return ret_dev
+        return {"valid": True, "entities": ret_dev}

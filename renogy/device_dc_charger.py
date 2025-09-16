@@ -37,7 +37,6 @@ class DCChargerDevice(RenogyDevice):
         self.WRITE_SERVICE_UUID = "0000ffd1-0000-1000-8000-00805f9b34fb"
         self.ha_device_name = "Renogy DC-DC Charger"
         self.model = "Unknown"
-        self.state = "Unknown"
         self.battery_type = "Unknown"
 
         self.sections = [
@@ -48,9 +47,7 @@ class DCChargerDevice(RenogyDevice):
             {"register": 256, "words": 30},
         ]
 
-    def parse_section(
-        self, bs: bytearray, section_index: int
-    ) -> list[RenogyDeviceData]:
+    def parse_section(self, bs: bytearray, section_index: int) -> dict:
         """Parse a section of data from the device."""
         if section_index == 0:
             return self.parse_device_info(bs)
@@ -63,12 +60,12 @@ class DCChargerDevice(RenogyDevice):
         if section_index == 4:
             return self.parse_charging_info(bs)
 
-        return []
+        return {"valid": False, "entities": []}
 
     def parse_device_info(self, bs):
         """Parse device information from the device."""
         self.model = (bs[3:19]).decode("utf-8").strip()
-        return []
+        return {"valid": True, "entities": []}
 
     def parse_device_address(self, bs):
         """Parse the device address from the device."""
@@ -84,7 +81,7 @@ class DCChargerDevice(RenogyDevice):
             attributes={},
         )
         ret_dev.append(dev)
-        return ret_dev
+        return {"valid": True, "entities": ret_dev}
 
     def parse_charging_info(self, bs):
         """Parse charging information from the device."""
@@ -124,7 +121,6 @@ class DCChargerDevice(RenogyDevice):
             is_main=True,
             attributes={
                 "model": self.model,
-                "state": self.state,
                 "battery_type": self.battery_type,
             },
         )
@@ -358,16 +354,28 @@ class DCChargerDevice(RenogyDevice):
         )
         ret_dev.append(dev)
 
-        return ret_dev
+        return {"valid": True, "entities": ret_dev}
 
     def parse_battery_type(self, bs):
         """Parse battery type from the device."""
         self.battery_type = BATTERY_TYPE.get(bytes_to_int(bs, 3, 2))
-        return []
+        return {"valid": True, "entities": []}
 
     def parse_state(self, bs):
         """Parse device state from the device."""
-        self.state = CHARGING_STATE.get(bytes_to_int(bs, 2, 1))
+        ret_dev = []
+
+        entity_id = 25
+        dev = RenogyDeviceData(
+            device_id=1,
+            device_name=self.ha_device_name,
+            device_unique_id=self.device_unique_id + f"_{entity_id}",
+            device_type=RenogyDeviceType.STRING_DATA,
+            name="Charge State",
+            state=CHARGING_STATE.get(bytes_to_int(bs, 2, 1)),
+            attributes={},
+        )
+        ret_dev.append(dev)
 
         # alarms = {}
 
@@ -392,4 +400,4 @@ class DCChargerDevice(RenogyDevice):
         # key = next((key for key, value in alarms.items() if value > 0), None)
         # if (key != None): data['error'] = key
 
-        return []
+        return {"valid": True, "entities": ret_dev}

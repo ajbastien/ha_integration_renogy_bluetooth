@@ -28,14 +28,12 @@ class ShuntDevice(RenogyDevice):
 
         self.first_parse = True
 
-    def parse_section(
-        self, bs: bytearray, section_index: int
-    ) -> list[RenogyDeviceData]:
+    def parse_section(self, bs: bytearray, section_index: int) -> dict:
         """Parse a section of data from the device."""
         if (
-            section_index != 0 or not self.first_parse
+            section_index != 0 or not self.first_parse or len(bs) < 100
         ):  # The shunt sends many notifications in a row, we only need the first one
-            return []
+            return {"valid": False, "entities": []}
 
         self.first_parse = False
 
@@ -121,4 +119,4 @@ class ShuntDevice(RenogyDevice):
         # - discharge_duration
         # - consumed_amp_hours
 
-        return ret_dev
+        return {"valid": True, "entities": ret_dev}
