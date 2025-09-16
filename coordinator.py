@@ -35,7 +35,7 @@ class RenogyCoordinator(DataUpdateCoordinator):
 
         # Set variables from values entered in config flow setup
         self.mac = config_entry.data[CONF_MAC]
-        self.name = config_entry.data[CONF_NAME]
+        self.name2 = config_entry.data[CONF_NAME]
         self.device_name = None
         self.device_type = config_entry.data[CONF_TYPE]
 
@@ -57,7 +57,7 @@ class RenogyCoordinator(DataUpdateCoordinator):
         )
 
         # Initialise your api here
-        self.api = API(mac=self.mac, name=self.name, device_type=self.device_type)
+        self.api = API(mac=self.mac, name=self.name2, device_type=self.device_type)
 
     async def async_update_data(self):
         """Fetch data from API endpoint.
