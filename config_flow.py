@@ -77,7 +77,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     #     raise InvalidAuth from err
     # except APIConnectionError as err:
     #     raise CannotConnect from err
-    _LOGGER.debug("Validation of input successful %s", data)
+
     return {"title": f"Renogy Bluetooth Integration - {data[CONF_MAC]}"}
 
 

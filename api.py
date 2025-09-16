@@ -57,7 +57,6 @@ class API:
 
         ble_device = None
         if self.device_type != "TestDevice":
-            _LOGGER.debug("Getting BLE Device Info")
             ble_device = bluetooth.async_ble_device_from_address(hass, self.mac)
             if not ble_device:
                 raise ConfigEntryNotReady(
@@ -95,7 +94,7 @@ class API:
                 f"Could get entities from Renogy device with address {self.mac}"
             )
 
-        _LOGGER.debug("Getting devices from api: %s", devicesRet)
+        _LOGGER.debug("api.get_devices: %s", devicesRet)
         self.lastUpdateValid = True
 
         return devicesRet

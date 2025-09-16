@@ -106,7 +106,7 @@ class PowerSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.device = device
         self.device_id = device.device_id
-        _LOGGER.debug("Init Device: %s", self.device)
+        # _LOGGER.debug("Init Device: %s", self.device)
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -115,7 +115,7 @@ class PowerSensor(CoordinatorEntity, SensorEntity):
         self.device = self.coordinator.get_device_by_unique_id(
             self.device.device_unique_id
         )
-        _LOGGER.debug("Update Device: %s", self.device)
+        # _LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()
 
     @property
@@ -177,7 +177,7 @@ class EnergyStorageSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.device = device
         self.device_id = device.device_id
-        _LOGGER.debug("Init Device: %s", self.device)
+        # _LOGGER.debug("Init Device: %s", self.device)
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -186,7 +186,7 @@ class EnergyStorageSensor(CoordinatorEntity, SensorEntity):
         self.device = self.coordinator.get_device_by_unique_id(
             self.device.device_unique_id
         )
-        _LOGGER.debug("Update Device: %s", self.device)
+        # _LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()
 
     @property
@@ -248,7 +248,7 @@ class AmpHourSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.device = device
         self.device_id = device.device_id
-        _LOGGER.debug("Init Device: %s", self.device)
+        # _LOGGER.debug("Init Device: %s", self.device)
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -257,7 +257,7 @@ class AmpHourSensor(CoordinatorEntity, SensorEntity):
         self.device = self.coordinator.get_device_by_unique_id(
             self.device.device_unique_id
         )
-        _LOGGER.debug("Update Device: %s", self.device)
+        # _LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()
 
     @property
@@ -319,7 +319,7 @@ class CurrentSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.device = device
         self.device_id = device.device_id
-        _LOGGER.debug("Init Device: %s", self.device)
+        # _LOGGER.debug("Init Device: %s", self.device)
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -328,7 +328,7 @@ class CurrentSensor(CoordinatorEntity, SensorEntity):
         self.device = self.coordinator.get_device_by_unique_id(
             self.device.device_unique_id
         )
-        _LOGGER.debug("Update Device: %s", self.device)
+        # _LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()
 
     @property
@@ -390,7 +390,7 @@ class VoltageSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.device = device
         self.device_id = device.device_id
-        _LOGGER.debug("Init Device: %s", self.device)
+        # _LOGGER.debug("Init Device: %s", self.device)
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -399,7 +399,7 @@ class VoltageSensor(CoordinatorEntity, SensorEntity):
         self.device = self.coordinator.get_device_by_unique_id(
             self.device.device_unique_id
         )
-        _LOGGER.debug("Update Device: %s", self.device)
+        # _LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()
 
     @property
@@ -461,7 +461,7 @@ class PercentageSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.device = device
         self.device_id = device.device_id
-        _LOGGER.debug("Init Device: %s", self.device)
+        # _LOGGER.debug("Init Device: %s", self.device)
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -470,7 +470,7 @@ class PercentageSensor(CoordinatorEntity, SensorEntity):
         self.device = self.coordinator.get_device_by_unique_id(
             self.device.device_unique_id
         )
-        _LOGGER.debug("Update Device: %s", self.device)
+        # _LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()
 
     @property
@@ -532,7 +532,7 @@ class TemperatureSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.device = device
         self.device_id = device.device_id
-        _LOGGER.debug("Init Device: %s", self.device)
+        # _LOGGER.debug("Init Device: %s", self.device)
         # Device(device_id=1, device_unique_id='C4_D3_6A_93_B2_3B_T1', device_type=<DeviceType.TEMPERATURE_SENSOR: 'TEMPERATURE_SENSOR'>, name='Temp Sensor 1', state=17)
 
     @callback
@@ -542,7 +542,7 @@ class TemperatureSensor(CoordinatorEntity, SensorEntity):
         self.device = self.coordinator.get_device_by_unique_id(
             self.device.device_unique_id
         )
-        _LOGGER.debug("Update Device: %s", self.device)
+        # _LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()
 
     @property
@@ -604,7 +604,7 @@ class IntSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.device = device
         self.device_id = device.device_id
-        _LOGGER.debug("Init Device: %s", self.device)
+        # _LOGGER.debug("Init Device: %s", self.device)
         # Device(device_id=1, device_unique_id='C4_D3_6A_93_B2_3B_T1', device_type=<DeviceType.TEMPERATURE_SENSOR: 'TEMPERATURE_SENSOR'>, name='Temp Sensor 1', state=17)
 
     @callback
@@ -614,7 +614,7 @@ class IntSensor(CoordinatorEntity, SensorEntity):
         self.device = self.coordinator.get_device_by_unique_id(
             self.device.device_unique_id
         )
-        _LOGGER.debug("Update Device: %s", self.device)
+        # _LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()
 
     @property
@@ -659,7 +659,7 @@ class StringSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.device = device
         self.device_id = device.device_id
-        _LOGGER.debug("Init Device: %s", self.device)
+        # _LOGGER.debug("Init Device: %s", self.device)
         # Device(device_id=1, device_unique_id='C4_D3_6A_93_B2_3B_T1', device_type=<DeviceType.TEMPERATURE_SENSOR: 'TEMPERATURE_SENSOR'>, name='Temp Sensor 1', state=17)
 
     @callback
@@ -669,7 +669,7 @@ class StringSensor(CoordinatorEntity, SensorEntity):
         self.device = self.coordinator.get_device_by_unique_id(
             self.device.device_unique_id
         )
-        _LOGGER.debug("Update Device: %s", self.device)
+        # _LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()
 
     @property

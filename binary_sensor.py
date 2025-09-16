@@ -59,7 +59,7 @@ class BinarySensor1(CoordinatorEntity, BinarySensorEntity):
         self.device = self.coordinator.get_device_by_unique_id(
             self.device.device_unique_id
         )
-        _LOGGER.debug("Device: %s", self.device)
+        #_LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()
 
     @property

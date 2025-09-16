@@ -81,8 +81,6 @@ class RenogyDevice(abc.ABC):
         to the ret_dev_data list for Home Assistant entity creation.
         """
 
-        _LOGGER.debug("Adding basic device info entities")
-
         for dev in self.ret_dev_data:
             if dev.is_main:
                 dev.attributes["mac"] = self.mac
@@ -115,7 +113,7 @@ class RenogyDevice(abc.ABC):
                 # _LOGGER.debug("ret_dev_data: %s", self.ret_dev_data)
                 self._notification_event.set()  # Trigger event
         else:
-            _LOGGER.debug(
+            _LOGGER.warning(
                 "Unknown operation response received, ignoring for now.  Looking for %d %d",
                 self.READ_OPERATION,
                 len(self.sections),
@@ -136,7 +134,7 @@ class RenogyDevice(abc.ABC):
             crc = crc16_modbus(bytes(data))
             data.append(crc[0])
             data.append(crc[1])
-            _LOGGER.debug("create_request_payload %s => %s", regAddr, data)
+            # _LOGGER.debug("create_request_payload %s => %s", regAddr, data)
         return data
 
     async def read_section(self, client: BleakClient):
@@ -177,7 +175,7 @@ class RenogyDevice(abc.ABC):
                     _LOGGER.error("No NOTIFY_SERVICE_UUID defined")
                     return []
 
-                _LOGGER.debug("Connecting to device %s", ble_device.address)
+                # _LOGGER.debug("Connecting to device %s", ble_device.address)
                 self.client = await establish_connection(
                     BleakClient, ble_device, ble_device.address
                 )
@@ -188,7 +186,7 @@ class RenogyDevice(abc.ABC):
 
                 # await self.printServices(self.client)
 
-                _LOGGER.debug("Starting Notification for %s", self.NOTIFY_SERVICE_UUID)
+                # _LOGGER.debug("Starting Notification for %s", self.NOTIFY_SERVICE_UUID)
                 await self.client.start_notify(
                     self.NOTIFY_SERVICE_UUID, self.notification_callback
                 )
@@ -208,10 +206,9 @@ class RenogyDevice(abc.ABC):
             else:
                 _LOGGER.warning("Simulated device - no BLE actions")
                 items = self.parse_section(b"ab232", self.section_index)
-                _LOGGER.debug("items: %s", items)
+
                 if items["valid"]:
                     self.ret_dev_data.extend(items["entities"])
-                    _LOGGER.debug("ret_dev_data: %s", self.ret_dev_data)
                     self._notification_event.set()  # Trigger event
                 # _LOGGER.debug("ret_dev_data: %s", self.ret_dev_data)
 
@@ -223,7 +220,6 @@ class RenogyDevice(abc.ABC):
             return []
 
         self.add_devices()
-
         return self.ret_dev_data
 
     @abc.abstractmethod
