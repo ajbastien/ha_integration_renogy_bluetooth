@@ -20,6 +20,10 @@ Copy the files to /config/custom_components/renogy_bluetooth
 You must specify the MAC address and select the appropriate device type.  
 **Note:** I only support single device Bluetooth and not the master slave devices at this time.
 
+## Note on Raspberry Pi Bluetooth
+
+ I have found that the Raspberry Pi bluetooth adapter barely works. The use of a Bluetooth Proxy ESPHome device enhances the connectivity 100 fold. It connects 95+% of the time while Raspberry Pi seems to connect maybe 30% of the time.
+
 # Special Thanks To:
 
 1. https://github.com/cyrils/renogy-bt for providing the Inverter and DC to DC Charger parsing and the understanding of the flow for Renogy devices
