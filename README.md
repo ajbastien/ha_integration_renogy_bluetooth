@@ -22,7 +22,7 @@ You must specify the MAC address and select the appropriate device type.
 
 ## Note on Raspberry Pi Bluetooth
 
- I have found that the Raspberry Pi bluetooth adapter barely works. The use of a Bluetooth Proxy ESPHome device enhances the connectivity 100 fold. It connects 95+% of the time while Raspberry Pi seems to connect maybe 30% of the time.
+ I have found that the Raspberry Pi bluetooth adapter barely works. The use of a Bluetooth Proxy ESPHome device enhances the connectivity 100 fold. It connects 95+% of the time while Raspberry Pi 4 and Pi Zero W seems to connect maybe 30% of the time.
 
 # Special Thanks To:
 
