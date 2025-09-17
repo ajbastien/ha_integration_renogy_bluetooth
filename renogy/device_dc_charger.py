@@ -264,7 +264,7 @@ class DCChargerDevice(RenogyDevice):
             device_name=self.ha_device_name,
             device_unique_id=self.device_unique_id + f"_{entity_id}",
             device_type=RenogyDeviceType.POWER_SENSOR,
-            name="Batt Charging Power Today",
+            name="Batt Max Power Today",
             state=bytes_to_int(bs, 33, 2),
             attributes={},
         )
