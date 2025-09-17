@@ -22,6 +22,6 @@ You must specify the MAC address and select the appropriate device type.
 
 # Special Thanks To:
 
-1. https://github.com/cyrils/renogy-bt for providing the Inverter and DC to DC Charger parsing
-2. https://github.com/antflix/ha_renogy_smart_shunt for providing the Shunt parsing
+1. https://github.com/cyrils/renogy-bt for providing the Inverter and DC to DC Charger parsing and the understanding of the flow for Renogy devices
+2. https://github.com/antflix/ha_renogy_smart_shunt for providing the Shunt parsing and the understanding that it is different from the other devices
 3. https://github.com/msp1974/HAIntegrationExamples for providing the well documented HA integration 101 template
