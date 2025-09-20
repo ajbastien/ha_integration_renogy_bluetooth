@@ -37,8 +37,8 @@ class InverterDevice(RenogyDevice):
 
         self.sections = [
             {"register": 4311, "words": 8},
-            {"register": 4000, "words": 10},
             {"register": 4109, "words": 1},
+            {"register": 4000, "words": 10},
             {"register": 4408, "words": 6},
             # {'register': 4327, 'words': 7},
         ]
@@ -158,11 +158,11 @@ class InverterDevice(RenogyDevice):
 
         entity_id = 9
         dev = RenogyDeviceData(
-            device_id=2,
-            device_name="Main Battery",
+            device_id=1,
+            device_name=self.ha_device_name,
             device_unique_id=self.device_unique_id + f"_{entity_id}",
             device_type=RenogyDeviceType.TEMPERATURE_SENSOR,
-            name="Battery Temperature",
+            name="Inverter Temperature",
             state=bytes_to_int(bs, 15, 2, scale=0.1),
             attributes={},
         )

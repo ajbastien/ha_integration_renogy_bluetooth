@@ -8,12 +8,23 @@
   "dependencies": [
     "bluetooth_adapters"
   ],
-  "documentation": "https://github.com/ajbastien/renogy_bluetooth",
+  "documentation": "https://github.com/ajbastien/ha_integration_renogy_bluetooth",
   "homekit": {},
   "iot_class": "local_polling",
   "requirements": [],
   "single_config_entry": false,
   "ssdp": [],
   "version": "0.0.1",
-  "zeroconf": []
+  "zeroconf": [],
+  "bluetooth": [
+    {
+      "local_name": "RTMShunt*"
+    },
+    {
+      "local_name": "BT-TH-*"
+    },
+    {
+      "local_name": "RNGRIU*"
+    }
+  ]
 }

@@ -260,11 +260,11 @@ class AmpHourSensor(CoordinatorEntity, SensorEntity):
         # _LOGGER.debug("Update Device: %s", self.device)
         self.async_write_ha_state()
 
-    @property
-    def device_class(self) -> str:
-        """Return device class."""
-        # https://developers.home-assistant.io/docs/core/entity/sensor/#available-device-classes
-        return SensorDeviceClass.ENERGY_STORAGE
+    # @property
+    # def device_class(self) -> str:
+    #     """Return device class."""
+    #     # https://developers.home-assistant.io/docs/core/entity/sensor/#available-device-classes
+    #     return SensorDeviceClass.ENERGY_STORAGE
 
     @property
     def device_info(self) -> DeviceInfo:

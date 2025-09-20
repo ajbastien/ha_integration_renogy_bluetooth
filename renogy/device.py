@@ -99,7 +99,7 @@ class RenogyDevice(abc.ABC):
         """Handle notifications from the BLE device."""
         operation = bytes_to_int(data, 1, 1)
         _LOGGER.debug(
-            "notification_callback %d - %d l:%d - %s",
+            "%s - notification_callback %d - %d l:%d - %s", self.name,
             operation,
             self.section_index,
             len(data),
@@ -110,11 +110,11 @@ class RenogyDevice(abc.ABC):
             items = self.parse_section(data, self.section_index)
             if items["valid"]:
                 self.ret_dev_data.extend(items["entities"])
-                # _LOGGER.debug("ret_dev_data: %s", self.ret_dev_data)
+                # _LOGGER.debug("%s - ret_dev_data: %s", self.name, self.ret_dev_data)
                 self._notification_event.set()  # Trigger event
         else:
             _LOGGER.warning(
-                "Unknown operation response received, ignoring for now.  Looking for %d %d",
+                "%s - Unknown operation response received, ignoring for now.  Looking for %d %d", self.name,
                 self.READ_OPERATION,
                 len(self.sections),
             )
@@ -134,7 +134,7 @@ class RenogyDevice(abc.ABC):
             crc = crc16_modbus(bytes(data))
             data.append(crc[0])
             data.append(crc[1])
-            # _LOGGER.debug("create_request_payload %s => %s", regAddr, data)
+            _LOGGER.debug("%s - create_request_payload %s => %s", self.name, regAddr, data)
         return data
 
     async def read_section(self, client: BleakClient):
@@ -172,35 +172,48 @@ class RenogyDevice(abc.ABC):
         try:
             if self.WRITE_SERVICE_UUID != "TEST":
                 if self.NOTIFY_SERVICE_UUID is None:
-                    _LOGGER.error("No NOTIFY_SERVICE_UUID defined")
+                    _LOGGER.error("%s - No NOTIFY_SERVICE_UUID defined", self.name)
                     return []
 
-                # _LOGGER.debug("Connecting to device %s", ble_device.address)
+                # _LOGGER.debug("%s - Connecting to device %s", self.name, ble_device.address)
                 self.client = await establish_connection(
                     BleakClient, ble_device, ble_device.address
                 )
 
                 if not self.client.is_connected:
-                    _LOGGER.error("Failed to connect to device %s", ble_device.address)
+                    _LOGGER.error("%s - Failed to connect to device %s", self.name, ble_device.address)
                     self._raise_connection_error(ble_device.address)
 
                 # await self.printServices(self.client)
 
-                # _LOGGER.debug("Starting Notification for %s", self.NOTIFY_SERVICE_UUID)
+                _LOGGER.debug("%s - Starting Notification for %s", self.name, self.NOTIFY_SERVICE_UUID)
                 await self.client.start_notify(
                     self.NOTIFY_SERVICE_UUID, self.notification_callback
                 )
 
+                countsent = 0
+                recieved = 0
                 while self.section_index < len(self.sections):
-                    if self.WRITE_SERVICE_UUID is not None:
-                        await self.read_section(self.client)
+                    while countsent < 2 and recieved == 0:
+                        if self.WRITE_SERVICE_UUID is not None:
+                            await self.read_section(self.client)
 
-                    # Wait for notification before disconnecting
-                    await asyncio.wait_for(
-                        self._notification_event.wait(), timeout=10
-                    )  # Adjust timeout as needed
+                        countwait = 0
+                        while countwait < 25 and not self._notification_event.is_set():
+                            await asyncio.sleep(.2)
+                            countwait = countwait + 1
 
-                    self.section_index += 1
+                        _LOGGER.debug("%s - Event: %d", self.name, self._notification_event.is_set())
+                        countsent = countsent + 1
+                        if self._notification_event.is_set():
+                            recieved = 1
+
+                    if recieved == 1:
+                        self.section_index += 1
+                        countsent = 0
+                        recieved = 0
+                    else:
+                        self._raise_communication_error(self.name)
 
                 await self.client.disconnect()
             else:
@@ -213,7 +226,7 @@ class RenogyDevice(abc.ABC):
                 # _LOGGER.debug("ret_dev_data: %s", self.ret_dev_data)
 
         except Exception as e:  # noqa: BLE001
-            _LOGGER.error("Error processing device: %s", e)
+            _LOGGER.error("%s - Error processing device: %s", self.name, e)
             traceback.print_exc()
             if self.client is not None:
                 await self.client.disconnect()
@@ -229,6 +242,11 @@ class RenogyDevice(abc.ABC):
     def _raise_connection_error(self, address: str) -> None:
         raise DeviceConnectionError(f"Failed to connect to device {address}")
 
+    def _raise_communication_error(self, address: str) -> None:
+        raise DeviceCommunicationError(f"Failed to communicate to device {address}")
 
 class DeviceConnectionError(Exception):
     """Exception class for connection error."""
+
+class DeviceCommunicationError(Exception):
+    """Exception class for communication error."""
