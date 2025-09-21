@@ -13,10 +13,16 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
+from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import (
+    BluetoothServiceInfo,
+    async_discovered_service_info,
+)
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import selector
+from homeassistant.data_entry_flow import FlowResult
 
 from .api import APIAuthError
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL
@@ -45,6 +51,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         ),
     }
 )
+
+class RenogyBluetoothDeviceUpdateError(Exception):
+    """Custom error class for device updates."""
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -87,6 +96,10 @@ class RBConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     _input_data: dict[str, Any]
 
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self._discovered_device: dict[str, Any] = {}
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
@@ -95,12 +108,96 @@ class RBConfigFlow(ConfigFlow, domain=DOMAIN):
         # if you do not want any options for your integration.
         return RBOptionsFlowHandler(config_entry)
 
+    async def discovery_get_data(
+        self, discovery_info: BluetoothServiceInfo
+    ) -> dict[str, Any]:
+        retData = {}
+        ble_device = bluetooth.async_ble_device_from_address(
+            self.hass, discovery_info.address
+        )
+        if ble_device is None:
+            _LOGGER.error("no ble_device in discovery_get_data")
+            raise RenogyBluetoothDeviceUpdateError("No ble_device for %s", discovery_info.address)
+
+        retData[CONF_NAME] = ble_device.name
+        retData[CONF_MAC] = ble_device.address
+
+        if ble_device.name.startswith("RTMShunt"):
+            retData[CONF_TYPE] = "SmartShunt300"
+        elif ble_device.name.startswith("BT-TH-"):
+            retData[CONF_TYPE] = "DcDcCharger"
+        elif ble_device.name.startswith("RNGRIU"):
+            retData[CONF_TYPE] = "Inverter"
+        else:
+            retData[CONF_TYPE] = "Unknown"
+
+        return retData
+
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfo
+    ) -> FlowResult:
+        """Handle the bluetooth discovery step."""
+        _LOGGER.info("Discovered BT device: %s", discovery_info)
+        # await self.async_set_unique_id(discovery_info.address)
+        # self._abort_if_unique_id_configured()
+
+        deviceData = await self.discovery_get_data(discovery_info)
+        _LOGGER.info("Discovered discovery_get_data: %s", deviceData)
+
+        self._discovered_device = deviceData
+        self.context["title_placeholders"] = {CONF_NAME: deviceData[CONF_NAME]}
+
+        return await self.async_step_bluetooth_confirm()
+
+    async def async_step_bluetooth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm discovery."""
+        _LOGGER.debug("async_step_bluetooth_confirm - %s", user_input)
+        _LOGGER.debug("async_step_bluetooth_confirm curr ids - %s", self._async_current_ids())
+        _LOGGER.debug("async_step_bluetooth_confirm discov - %s", self._discovered_device)
+
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self.context["title_placeholders"][CONF_NAME], data=user_input
+            )
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="bluetooth_confirm",
+            description_placeholders=self.context["title_placeholders"],
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_MAC, default=self._discovered_device[CONF_MAC]): str,
+                    vol.Required(CONF_NAME, default=self._discovered_device[CONF_NAME]): str,
+                    vol.Required(
+                        CONF_TYPE,
+                        default=self._discovered_device[CONF_TYPE],  # ): str,
+                    ): selector(
+                        {
+                            "select": {
+                                "options": [
+                                    "Inverter",
+                                    "SmartShunt300",
+                                    "DcDcCharger",
+                                    "TestDevice",
+                                ],
+                            }
+                        }
+                    ),
+                }
+            ),
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         # Called when you initiate adding an integration via the UI
         errors: dict[str, str] = {}
+
+        _LOGGER.debug("async_step_user - %s", user_input)
+        _LOGGER.debug("async_step_user current ids - %s", self._async_current_ids())
 
         if user_input is not None:
             # The form has been filled in and submitted, so process the data provided.
