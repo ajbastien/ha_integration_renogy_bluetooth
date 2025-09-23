@@ -30,6 +30,8 @@ class ShuntDevice(RenogyDevice):
 
     def parse_section(self, bs: bytearray, section_index: int) -> dict:
         """Parse a section of data from the device."""
+        
+        # I'd like to validate the checksum but it seems to be non-standard and I can't figure it out.
         if (
             section_index != 0 or not self.first_parse or len(bs) != 110
         ):  # The shunt sends many notifications in a row, we only need the first one
@@ -39,13 +41,17 @@ class ShuntDevice(RenogyDevice):
 
         ret_dev = []
         entity_id = 1
+        value = bytes_to_int(bs, 34, 2, scale=0.1)  # 0xA6 (#1),
+        if not self.validateLimits(value, 0, 100):
+            _LOGGER.error("Invalid battery percentage: %f", value)
+            return {"valid": False, "entities": []}
         dev = RenogyDeviceData(
             device_id=1,
             device_name=self.ha_device_name,
             device_unique_id=self.device_unique_id + f"_{entity_id}",
             device_type=RenogyDeviceType.PERCENTAGE,
             name="Main Battery Percent",
-            state=bytes_to_int(bs, 34, 2, scale=0.1),  # 0xA6 (#1),
+            state=value,
             is_main=True,
             attributes={},
         )
@@ -53,6 +59,9 @@ class ShuntDevice(RenogyDevice):
 
         volts = bytes_to_int(bs, 25, 3, scale=0.001)  # 0xA6 (#1)
         entity_id = 2
+        if not self.validateLimits(volts, 0, 20):
+            _LOGGER.error("Invalid battery voltage: %f", volts)
+            return {"valid": False, "entities": []}
         dev = RenogyDeviceData(
             device_id=1,
             device_name=self.ha_device_name,
@@ -65,19 +74,26 @@ class ShuntDevice(RenogyDevice):
         ret_dev.append(dev)
 
         entity_id = 3
+        value = bytes_to_int(bs, 30, 2, scale=0.001) # 0xA6 (#2)
+        if not self.validateLimits(value, 0, 20):
+            _LOGGER.error("Invalid starter battery voltage: %f", value)
+            return {"valid": False, "entities": []}
         dev = RenogyDeviceData(
             device_id=2,
             device_name="Starter Battery",
             device_unique_id=self.device_unique_id + f"_{entity_id}",
             device_type=RenogyDeviceType.VOLTAGE_SENSOR,
             name="Starter Battery Voltage",
-            state=bytes_to_int(bs, 30, 2, scale=0.001),  # 0xA6 (#2)
+            state=value,  
             attributes={},
         )
         ret_dev.append(dev)
 
         amps = bytes_to_int(bs, 21, 3, scale=0.001, signed=True)  # 0xA4 (#1)
         entity_id = 4
+        if not self.validateLimits(amps, -300, 300):
+            _LOGGER.error("Invalid battery amps: %f", amps)
+            return {"valid": False, "entities": []}
         dev = RenogyDeviceData(
             device_id=1,
             device_name=self.ha_device_name,
@@ -102,13 +118,17 @@ class ShuntDevice(RenogyDevice):
         ret_dev.append(dev)
 
         entity_id = 6
+        value = bytes_to_int(bs, 66, 2, scale=0.1)  # 0xAD (#3
+        if not self.validateLimits(value, -20, 40):
+            _LOGGER.error("Invalid battery temperature: %f", value)
+            return {"valid": False, "entities": []}
         dev = RenogyDeviceData(
             device_id=1,
             device_name=self.ha_device_name,
             device_unique_id=self.device_unique_id + f"_{entity_id}",
             device_type=RenogyDeviceType.TEMPERATURE_SENSOR,
             name="Main Battery Temperature",
-            state=bytes_to_int(bs, 66, 2, scale=0.1),  # 0xAD (#3
+            state=value,
             attributes={},
         )
         ret_dev.append(dev)

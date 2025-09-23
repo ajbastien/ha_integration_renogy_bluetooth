@@ -45,6 +45,8 @@ class InverterDevice(RenogyDevice):
 
     def parse_section(self, bs: bytearray, section_index: int) -> dict:
         """Parse a section of data from the device."""
+
+        # TODO: Validate checksum
         if section_index == 0:
             return self.parse_inverter_model(bs)
         if section_index == 1:

@@ -235,6 +235,11 @@ class RenogyDevice(abc.ABC):
         self.add_devices()
         return self.ret_dev_data
 
+    def validateLimits(self, value, min, max) -> bool:
+        if value < min or value > max:
+            return False
+        return True
+
     @abc.abstractmethod
     def parse_section(self, bs: bytearray, section_index: int) -> dict:
         """Parse the section data. Must be implemented in child classes."""
