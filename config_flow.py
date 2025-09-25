@@ -138,8 +138,9 @@ class RBConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
         _LOGGER.info("Discovered BT device: %s", discovery_info)
-        # await self.async_set_unique_id(discovery_info.address)
-        # self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(discovery_info.address)
+        self._abort_if_unique_id_configured()
+        _LOGGER.debug("async_step_bluetooth unique id - %s", discovery_info.address)
 
         deviceData = await self.discovery_get_data(discovery_info)
         _LOGGER.info("Discovered discovery_get_data: %s", deviceData)
@@ -216,8 +217,10 @@ class RBConfigFlow(ConfigFlow, domain=DOMAIN):
             if "base" not in errors:
                 # Validation was successful, so create a unique id for this instance of your integration
                 # and create the config entry.
-                await self.async_set_unique_id(info.get("title"))
+                _LOGGER.debug("async_step_user unique id - before - %s", user_input[CONF_MAC])
+                await self.async_set_unique_id(user_input[CONF_MAC])
                 self._abort_if_unique_id_configured()
+                _LOGGER.debug("async_step_user unique id - %s", user_input[CONF_MAC])
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         # Show initial form.
