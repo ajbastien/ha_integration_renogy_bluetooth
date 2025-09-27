@@ -104,9 +104,7 @@ class RBConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry):
         """Get the options flow for this handler."""
-        # Remove this method and the RBOptionsFlowHandler class
-        # if you do not want any options for your integration.
-        return RBOptionsFlowHandler(config_entry)
+        return RBOptionsFlowHandler()
 
     async def discovery_get_data(
         self, discovery_info: BluetoothServiceInfo
@@ -288,16 +286,10 @@ class RBConfigFlow(ConfigFlow, domain=DOMAIN):
 class RBOptionsFlowHandler(OptionsFlow):
     """Handles the options flow."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
-
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
         if user_input is not None:
-            options = self.config_entry.options | user_input
-            return self.async_create_entry(title="", data=options)
+            return self.async_create_entry(data=user_input)
 
         # It is recommended to prepopulate options fields with default values if available.
         # These will be the same default values you use on your coordinator for setting variable values
@@ -306,7 +298,7 @@ class RBOptionsFlowHandler(OptionsFlow):
             {
                 vol.Required(
                     CONF_SCAN_INTERVAL,
-                    default=self.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+                    default=self.config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
                 ): (vol.All(vol.Coerce(int), vol.Clamp(min=MIN_SCAN_INTERVAL))),
             }
         )
