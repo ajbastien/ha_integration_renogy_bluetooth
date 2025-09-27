@@ -97,6 +97,7 @@ class RenogyDevice(abc.ABC):
         self, characteristic: BleakGATTCharacteristic, data: bytearray
     ):
         """Handle notifications from the BLE device."""
+        # Part of step 3 below - recieve the responses from the device
         operation = bytes_to_int(data, 1, 1)
         _LOGGER.debug(
             "%s - notification_callback %d - %d l:%d - %s", self.name,
@@ -175,46 +176,64 @@ class RenogyDevice(abc.ABC):
                     _LOGGER.error("%s - No NOTIFY_SERVICE_UUID defined", self.name)
                     return []
 
-                # _LOGGER.debug("%s - Connecting to device %s", self.name, ble_device.address)
-                self.client = await establish_connection(
-                    BleakClient, ble_device, ble_device.address
-                )
+                countattempts = 0
+                self._notification_event.clear()
+                # Attempt the connection twice in the case the first connection has no successful data returned
+                while countattempts < 2 and not self._notification_event.is_set():
+                    _LOGGER.debug("%s - Connecting to device %s", self.name, ble_device.address)
+                    # Step 1 Connect to device
+                    self.client = await establish_connection(
+                        BleakClient, ble_device, ble_device.address
+                    )
+                    countattempts = countattempts + 1
 
-                if not self.client.is_connected:
-                    _LOGGER.error("%s - Failed to connect to device %s", self.name, ble_device.address)
-                    self._raise_connection_error(ble_device.address)
+                    if not self.client.is_connected:
+                        _LOGGER.error("%s - Failed to connect to device %s", self.name, ble_device.address)
+                        self._raise_connection_error(ble_device.address)
 
-                # await self.printServices(self.client)
+                    # await self.printServices(self.client)
 
-                _LOGGER.debug("%s - Starting Notification for %s", self.name, self.NOTIFY_SERVICE_UUID)
-                await self.client.start_notify(
-                    self.NOTIFY_SERVICE_UUID, self.notification_callback
-                )
+                    _LOGGER.debug("%s - Starting Notification for %s", self.name, self.NOTIFY_SERVICE_UUID)
+                    await self.client.start_notify(
+                        self.NOTIFY_SERVICE_UUID, self.notification_callback
+                    )
 
-                countsent = 0
-                recieved = 0
-                while self.section_index < len(self.sections):
-                    while countsent < 2 and recieved == 0:
-                        if self.WRITE_SERVICE_UUID is not None:
-                            await self.read_section(self.client)
+                    countsent = 0
+                    # Process each section entry in sections
+                    while countsent < 2 and self.section_index < len(self.sections):
+                        self._notification_event.clear()
+                        # Attempt to send and recieve at least two times in case data garbled or no response
+                        while countsent < 2 and not self._notification_event.is_set():
+                            # Step 2 Send data query (if needed)
+                            if self.WRITE_SERVICE_UUID is not None:
+                                await self.read_section(self.client)
+                            else:
+                                _LOGGER.debug("%s - No Write Service: %d", self.name, countsent)
 
-                        countwait = 0
-                        while countwait < 25 and not self._notification_event.is_set():
-                            await asyncio.sleep(.2)
-                            countwait = countwait + 1
+                            countwait = 0
+                            # Step 3 wait for response (response recieved in notification_callback method)
+                            while countwait < 30 and not self._notification_event.is_set():
+                                await asyncio.sleep(.2)
+                                countwait = countwait + 1
 
-                        _LOGGER.debug("%s - Event: %d", self.name, self._notification_event.is_set())
-                        countsent = countsent + 1
+                            _LOGGER.debug("%s - Event: %d - %d", self.name, self._notification_event.is_set(), countsent)
+                            countsent = countsent + 1
+
                         if self._notification_event.is_set():
-                            recieved = 1
+                            # Data recieved go to next section
+                            self.section_index += 1
+                            countsent = 0
+                        else:
+                            # no data received
+                            if countattempts < 2:
+                                # Disconnect and reconnect to try one more time
+                                self.section_index = 0
+                                await self.client.disconnect()
+                                await asyncio.sleep(2)
+                            else:
+                                self._raise_communication_error(self.mac)
 
-                    if recieved == 1:
-                        self.section_index += 1
-                        countsent = 0
-                        recieved = 0
-                    else:
-                        self._raise_communication_error(self.name)
-
+                # Step 4 disconnect from the device
                 await self.client.disconnect()
             else:
                 _LOGGER.warning("Simulated device - no BLE actions")
@@ -228,6 +247,7 @@ class RenogyDevice(abc.ABC):
         except Exception as e:  # noqa: BLE001
             _LOGGER.error("%s - Error processing device: %s", self.name, e)
             traceback.print_exc()
+            # if connected - disconnect
             if self.client is not None:
                 await self.client.disconnect()
             return []

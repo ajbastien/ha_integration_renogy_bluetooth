@@ -26,6 +26,8 @@ class ShuntDevice(RenogyDevice):
 
         self.sections = [{"register": 256, "words": 110}]
 
+        # This flag is used to ensure we don't process 2 responses and duplicate device data
+        # The shunt does not wait for a write request it just keeps sending the data 
         self.first_parse = True
 
     def parse_section(self, bs: bytearray, section_index: int) -> dict:
@@ -37,6 +39,7 @@ class ShuntDevice(RenogyDevice):
         ):  # The shunt sends many notifications in a row, we only need the first one
             return {"valid": False, "entities": []}
 
+        # got a respose set flag
         self.first_parse = False
 
         ret_dev = []
@@ -44,6 +47,8 @@ class ShuntDevice(RenogyDevice):
         value = bytes_to_int(bs, 34, 2, scale=0.1)  # 0xA6 (#1),
         if not self.validateLimits(value, 0, 100):
             _LOGGER.error("Invalid battery percentage: %f", value)
+            # Error seen reset flag
+            self.first_parse = True
             return {"valid": False, "entities": []}
         dev = RenogyDeviceData(
             device_id=1,
@@ -61,6 +66,8 @@ class ShuntDevice(RenogyDevice):
         entity_id = 2
         if not self.validateLimits(volts, 0, 20):
             _LOGGER.error("Invalid battery voltage: %f", volts)
+            # Error seen reset flag
+            self.first_parse = True
             return {"valid": False, "entities": []}
         dev = RenogyDeviceData(
             device_id=1,
@@ -77,6 +84,8 @@ class ShuntDevice(RenogyDevice):
         value = bytes_to_int(bs, 30, 2, scale=0.001) # 0xA6 (#2)
         if not self.validateLimits(value, 0, 20):
             _LOGGER.error("Invalid starter battery voltage: %f", value)
+            # Error seen reset flag
+            self.first_parse = True
             return {"valid": False, "entities": []}
         dev = RenogyDeviceData(
             device_id=2,
@@ -93,6 +102,8 @@ class ShuntDevice(RenogyDevice):
         entity_id = 4
         if not self.validateLimits(amps, -300, 300):
             _LOGGER.error("Invalid battery amps: %f", amps)
+            # Error seen reset flag
+            self.first_parse = True
             return {"valid": False, "entities": []}
         dev = RenogyDeviceData(
             device_id=1,
@@ -121,6 +132,8 @@ class ShuntDevice(RenogyDevice):
         value = bytes_to_int(bs, 66, 2, scale=0.1)  # 0xAD (#3
         if not self.validateLimits(value, -20, 40):
             _LOGGER.error("Invalid battery temperature: %f", value)
+            # Error seen reset flag
+            self.first_parse = True
             return {"valid": False, "entities": []}
         dev = RenogyDeviceData(
             device_id=1,
