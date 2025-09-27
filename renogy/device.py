@@ -180,7 +180,10 @@ class RenogyDevice(abc.ABC):
                 self._notification_event.clear()
                 # Attempt the connection twice in the case the first connection has no successful data returned
                 while countattempts < 2 and not self._notification_event.is_set():
-                    _LOGGER.debug("%s - Connecting to device %s", self.name, ble_device.address)
+                    if countattempts > 0:
+                        _LOGGER.warning("%s - Reconnecting to device %s", self.name, ble_device.address)
+                    else:
+                        _LOGGER.debug("%s - Connecting to device %s", self.name, ble_device.address)
                     # Step 1 Connect to device
                     self.client = await establish_connection(
                         BleakClient, ble_device, ble_device.address
